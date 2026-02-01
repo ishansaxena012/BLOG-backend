@@ -12,8 +12,10 @@ import {
   createPostValidator,
   updatePostValidator
 } from "./post.validator.js";
+import publicPostRoutes from "./post.public.routes.js";
 
 const router = Router();
+router.use(publicPostRoutes);
 
 /**
  * Create a post

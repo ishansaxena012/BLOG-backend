@@ -27,6 +27,11 @@ const postSchema = new mongoose.Schema(
   }
 );
 
+// Public feed indexes
+postSchema.index({ status: 1 }); // For filtering published posts
+postSchema.index({ createdAt: -1 }); // For sorting by creation date
+postSchema.index({ status: 1, createdAt: -1 }); // Mongo uses indexes left to right, filter then sort
+
 const Post = mongoose.model("Post", postSchema);
 
 export default Post;
