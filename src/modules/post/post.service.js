@@ -69,7 +69,6 @@ export const deletePost = async (postId, userId) => {
   return { message: "Post deleted successfully" };
 };
 
-
 export const fetchPublicPosts = async (query) => {
   const { page, limit, search } = normalizePublicFeedQuery(query);
   const skip = (page - 1) * limit;
@@ -123,7 +122,7 @@ export const fetchPublicPostById = async (id) => {
   return formatPublicPost(post, true);
 };
 
-const formatPublicPost = (post, full = false) => {
+export const formatPublicPost = (post, full = false) => {
   const base = {
     id: post._id,
     title: post.title,
@@ -140,3 +139,37 @@ const formatPublicPost = (post, full = false) => {
 
   return base;
 };
+
+export const incrementPostViews = async (postId) => {
+  try {
+    await Post.updateOne(
+      { _id: postId, status: "published" },
+      { $inc: { views: 1 } }
+    );
+  } catch (err) {
+    console.error("⚠️ Failed to increment views:", err.message);
+  }
+};
+
+
+export const getTrendingPosts = async(limit=10)=>{
+  const now = Date.now();
+  const posts = await Post.find({status: "published"})
+    .select("title author createdAt views")
+    .lean();
+
+    const scored = posts.map(post => {
+      const hoursSince = (now - new Date(post.createdAt).getTime()) / (1000*60*60);
+
+      const freshness=Math.max(0,100-hoursSince);
+
+      const score = 
+        (post.views || 0) * 0.6 +
+        freshness * 0.4;
+      return { ...post, score };
+    });
+
+    return scored
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit)
+}
